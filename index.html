@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Stor Agadir - الساعات</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  font-family:Arial,sans-serif;
+}
+
+body{
+  background:#f5f5f5;
+  color:#222;
+}
+
+header{
+  background:#111;
+  color:white;
+  padding:20px 15px;
+  text-align:center;
+}
+
+header h1{
+  font-size:30px;
+  margin-bottom:8px;
+}
+
+header p{
+  color:#ddd;
+}
+
+.search{
+  padding:15px;
+  background:white;
+}
+
+.search input{
+  width:100%;
+  padding:14px;
+  border:1px solid #ddd;
+  border-radius:10px;
+  font-size:16px;
+}
+
+.products{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+  padding:12px;
+  max-width:1100px;
+  margin:auto;
+}
+
+.product{
+  background:white;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,.08);
+  padding-bottom:12px;
+}
+
+.product img{
+  width:100%;
+  height:220px;
+  object-fit:contain;
+  display:block;
+  background:white;
+  cursor:pointer;
+}
+
+.product h2{
+  font-size:17px;
+  padding:10px 10px 5px;
+}
+
+.price{
+  color:#e63946;
+  font-size:19px;
+  font-weight:bold;
+  padding:0 10px 8px;
+}
+
+.product button{
+  width:calc(100% - 20px);
+  margin:0 10px;
+  padding:11px;
+  border:0;
+  border-radius:8px;
+  background:#111;
+  color:white;
+  font-size:15px;
+}
+
+.cart{
+  background:white;
+  margin:15px 10px;
+  padding:18px;
+  border-radius:12px;
+  max-width:1100px;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+.cart h2{
+  margin-bottom:12px;
+}
+
+.cart-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid #eee;
+  padding:12px 0;
+  gap:8px;
+}
+
+.quantity{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.quantity button{
+  width:32px;
+  height:32px;
+  border:0;
+  border-radius:6px;
+  background:#ddd;
+  font-size:18px;
+}
+
+.total{
+  font-size:20px;
+  font-weight:bold;
+  margin-top:15px;
+}
+
+.order{
+  margin-top:15px;
+}
+
+.order input,
+.order textarea{
+  width:100%;
+  padding:12px;
+  margin:6px 0;
+  border:1px solid #ddd;
+  border-radius:8px;
+  font-size:15px;
+}
+
+.order button{
+  width:100%;
+  padding:14px;
+  border:0;
+  border-radius:8px;
+  background:#25D366;
+  color:white;
+  font-size:17px;
+  font-weight:bold;
+  margin-top:8px;
+}
+
+footer{
+  background:#111;
+  color:white;
+  text-align:center;
+  padding:20px;
+  margin-top:20px;
+}
+
+@media(max-width:600px){
+  .products{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .product img{
+    height:180px;
+  }
+}
+
+@media(min-width:800px){
+  .products{
+    grid-template-columns:repeat(4,1fr);
+  }
+}
+
+/* نافذة تكبير الصورة */
+#imageViewer{
+  display:none;
+  position:fixed;
+  z-index:999;
+  left:0;
+  top:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,.9);
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+}
+
+#imageViewer img{
+  max-width:100%;
+  max-height:90%;
+  object-fit:contain;
+}
+
+#closeViewer{
+  position:absolute;
+  top:15px;
+  right:20px;
+  color:white;
+  font-size:35px;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>⌚ Stor Agadir</h1>
+  <p>ساعات أنيقة بأسعار مناسبة</p>
+</header>
+
+<div class="search">
+  <input
+    type="text"
+    id="search"
+    placeholder="🔎 ابحث عن ساعة..."
+    oninput="searchProducts()">
+</div>
+
+<section class="products" id="products"></section>
+
+<section class="cart">
+
+  <h2>🛒 طلبك</h2>
+
+  <div id="cartItems">
+    <p>لم تختر أي منتج بعد.</p>
+  </div>
+
+  <div class="total">
+    المجموع: <span id="total">0</span> درهم
+  </div>
+
+  <div class="order">
+
+    <h3>معلومات الزبون</h3>
+
+    <input
+      id="name"
+      type="text"
+      placeholder="الاسم الكامل">
+
+    <input
+      id="phone"
+      type="tel"
+      placeholder="رقم الهاتف">
+
+    <input
+      id="city"
+      type="text"
+      placeholder="المدينة">
+
+    <textarea
+      id="address"
+      rows="3"
+      placeholder="العنوان بالتفصيل"></textarea>
+
+    <button onclick="sendOrder()">
+      📲 إرسال الطلب عبر واتساب
+    </button>
+
+  </div>
+
+</section>
+
+<footer>
+
+  <p>Stor Agadir © 2026</p>
+
+  <p>
+    للطلب والاستفسار:
+    8783084921
+  </p>
+
+</footer>
+
+<!-- تكبير الصور -->
+
+<div id="imageViewer">
+
+  <span id="closeViewer">&times;</span>
+
+  <img id="largeImage" src="" alt="صورة الساعة">
+
+</div>
+
+<script>
+
+const products = [
+
+  {
+    id:1,
+    name:"ساعة 1",
+    price:100,
+    image:"images/watch1.jpg"
+  },
+
+  {
+    id:2,
+    name:"ساعة 2",
+    price:110,
+    image:"images/watch2.jpg"
+  },
+
+  {
+    id:3,
+    name:"ساعة 3",
+    price:120,
+    image:"images/watch3.jpg"
+  },
+
+  {
+    id:4,
+    name:"ساعة 4",
+    price:125,
+    image:"images/watch4.jpg"
+  },
+
+  {
+    id:5,
+    name:"ساعة 5",
+    price:130,
+    image:"images/watch5.jpg"
+  },
+
+  {
+    id:6,
+    name:"ساعة 6",
+    price:135,
+    image:"images/watch6.jpg"
+  },
+
+  {
+    id:7,
+    name:"ساعة 7",
+    price:140,
+    image:"images/watch7.jpg"
+  },
+
+  {
+    id:8,
+    name:"ساعة 8",
+    price:145,
+    image:"images/watch8.jpg"
+  },
+
+  {
+    id:9,
+    name:"ساعة 9",
+    price:150,
+    image:"images/watch9.jpg"
+  },
+
+  {
+    id:10,
+    name:"ساعة 10",
+    price:155,
+    image:"images/watch10.jpg"
+  },
+
+  {
+    id:11,
+    name:"ساعة 11",
+    price:160,
+    image:"images/watch11.jpg"
+  },
+
+  {
+    id:12,
+    name:"ساعة 12",
+    price:165,
+    image:"images/watch12.jpg"
+  },
+
+  {
+    id:13,
+    name:"ساعة 13",
+    price:170,
+    image:"images/watch13.jpg"
+  },
+
+  {
+    id:14,
+    name:"ساعة 14",
+    price:175,
+    image:"images/watch14.jpg"
+  },
+
+  {
+    id:15,
+    name:"ساعة 15",
+    price:180,
+    image:"images/watch15.jpg"
+  },
+
+  {
+    id:16,
+    name:"ساعة 16",
+    price:185,
+    image:"images/watch16.jpg"
+  },
+
+  {
+    id:17,
+    name:"ساعة 17",
+    price:190,
+    image:"images/watch17.jpg"
+  },
+
+  {
+    id:18,
+    name:"ساعة 18",
+    price:195,
+    image:"images/watch18.jpg"
+  },
+
+  {
+    id:19,
+    name:"ساعة 19",
+    price:200,
+    image:"images/watch19.jpg"
+  },
+
+  {
+    id:20,
+    name:"ساعة 20",
+    price:150,
+    image:"images/watch20.jpg"
+  }
+
+];
+
+let cart = [];
+
+
+function displayProducts(list=products){
+
+  const container =
+    document.getElementById("products");
+
+  container.innerHTML = "";
+
+  list.forEach(product => {
+
+    container.innerHTML += `
+
+      <div class="product">
+
+        <img
+          src="${product.image}"
+          alt="${product.name}"
+          onclick="openImage('${product.image}')">
+
+        <h2>
+          ${product.name}
+        </h2>
+
+        <div class="price">
+          ${product.price} درهم
+        </div>
+
+        <button
+          onclick="addToCart(${product.id})">
+
+          إضافة إلى الطلب
+
+        </button>
+
+      </div>
+
+    `;
+
+  });
+
+}
+
+
+function addToCart(id){
+
+  const product =
+    products.find(p => p.id === id);
+
+  const existing =
+    cart.find(p => p.id === id);
+
+  if(existing){
+
+    existing.quantity++;
+
+  }else{
+
+    cart.push({
+      ...product,
+      quantity:1
+    });
+
+  }
+
+  displayCart();
+
+}
+
+
+function changeQuantity(id,value){
+
+  const item =
+    cart.find(p => p.id === id);
+
+  if(!item) return;
+
+  item.quantity += value;
+
+  if(item.quantity <= 0){
+
+    cart =
+      cart.filter(p => p.id !== id);
+
+  }
+
+  displayCart();
+
+}
+
+
+function displayCart(){
+
+  const container =
+    document.getElementById("cartItems");
+
+  if(cart.length === 0){
+
+    container.innerHTML =
+      "<p>لم تختر أي منتج بعد.</p>";
+
+    document.getElementById("total")
+      .textContent = "0";
+
+    return;
+
+  }
+
+  container.innerHTML = "";
+
+  let total = 0;
+
+  cart.forEach(item => {
+
+    total +=
+      item.price * item.quantity;
+
+    container.innerHTML += `
+
+      <div class="cart-item">
+
+        <div>
+
+          <strong>
+            ${item.name}
+          </strong>
+
+          <br>
+
+          ${item.price} درهم
+
+        </div>
+
+        <div class="quantity">
+
+          <button
+            onclick="changeQuantity(${item.id},-1)">
+            −
+          </button>
+
+          <span>
+            ${item.quantity}
+          </span>
+
+          <button
+            onclick="changeQuantity(${item.id},1)">
+            +
+          </button>
+
+        </div>
+
+      </div>
+
+    `;
+
+  });
+
+  document.getElementById("total")
+    .textContent = total;
+
+}
+
+
+function searchProducts(){
+
+  const value =
+    document.getElementById("search")
+    .value
+    .toLowerCase();
+
+  const filtered =
+    products.filter(product =>
+      product.name
+      .toLowerCase()
+      .includes(value)
+    );
+
+  displayProducts(filtered);
+
+}
+
+
+function sendOrder(){
+
+  if(cart.length === 0){
+
+    alert("اختر منتجًا أولًا.");
+
+    return;
+
+  }
+
+  const name =
+    document.getElementById("name")
+    .value.trim();
+
+  const phone =
+    document.getElementById("phone")
+    .value.trim();
+
+  const city =
+    document.getElementById("city")
+    .value.trim();
+
+  const address =
+    document.getElementById("address")
+    .value.trim();
+
+  if(
+    !name ||
+    !phone ||
+    !city ||
+    !address
+  ){
+
+    alert(
+      "يرجى ملء جميع معلومات الزبون."
+    );
+
+    return;
+
+  }
+
+  let message =
+    "طلب جديد من Stor Agadir\n\n";
+
+  message +=
+    "الاسم: " + name + "\n";
+
+  message +=
+    "الهاتف: " + phone + "\n";
+
+  message +=
+    "المدينة: " + city + "\n";
+
+  message +=
+    "العنوان: " + address + "\n\n";
+
+  message +=
+    "المنتجات:\n";
+
+  cart.forEach(item => {
+
+    message +=
+      item.name +
+      " × " +
+      item.quantity +
+      " = " +
+      (item.price * item.quantity) +
+      " درهم\n";
+
+  });
+
+  const total =
+    cart.reduce(
+      (sum,item) =>
+        sum + item.price * item.quantity,
+      0
+    );
+
+  message +=
+    "\nالمجموع: " +
+    total +
+    " درهم";
+
+  const whatsapp =
+    "2128783084921";
+
+  window.open(
+    "https://wa.me/" +
+    whatsapp +
+    "?text=" +
+    encodeURIComponent(message),
+    "_blank"
+  );
+
+}
+
+
+/* تكبير الصورة */
+
+function openImage(image){
+
+  const viewer =
+    document.getElementById("imageViewer");
+
+  const largeImage =
+    document.getElementById("largeImage");
+
+  largeImage.src = image;
+
+  viewer.style.display = "flex";
+
+}
+
+
+document
+  .getElementById("closeViewer")
+  .onclick = function(){
+
+    document
+      .getElementById("imageViewer")
+      .style.display = "none";
+
+  };
+
+
+document
+  .getElementById("imageViewer")
+  .onclick = function(e){
+
+    if(e.target === this){
+
+      this.style.display = "none";
+
+    }
+
+  };
+
+
+displayProducts();
+
+displayCart();
+
+</script>
+
+</body>
+  </html>
